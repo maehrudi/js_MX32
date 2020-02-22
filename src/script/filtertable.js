@@ -1,4 +1,5 @@
 function init_filtertable() {
+    console.log("init_filtertable")
 
     document.querySelectorAll('.filtertable').forEach(element => {
         var hrow = element.querySelector('thead tr');
