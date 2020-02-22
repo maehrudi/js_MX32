@@ -5,8 +5,8 @@ var selected_file = null;
 var channels = [];
 var ip_list = new Map();
 var inList;
-var ip_chan_list = [];
-var op_chan_list = [];
+var ip_chan_list;
+var op_chan_list;
 
 class Channel{
     constructor(dir, type, num, name, color, in_nr=null) {
@@ -127,7 +127,7 @@ function proceed() {
         console.log(ip_chan_list);
         build_table('inputtable', ip_chan_list);
 
-
+        op_chan_list = []
         op_chan_list.push(new OutputItem('TEST1', 'testitestitest'));
         build_table('outputtable', op_chan_list);
 
@@ -207,6 +207,7 @@ function parse_inputs_patch() {
 
 
 function link_channels_to_ip(){
+    ip_chan_list = [];
     [
         ['AN', 32],
         ['A', 48],
