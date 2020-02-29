@@ -2,11 +2,12 @@
 var file_content = null;
 var selected_file = null;
 
-var channels = [];
+var channels = new Map();
 var ip_list = new Map();
 var inList;
 var ip_chan_list;
 var op_chan_list;
+var outputs = [];
 
 class Channel{
     constructor(dir, type, num, name, color, in_nr=null) {
@@ -53,7 +54,7 @@ class OutputItem{
     }
 
     get_tableEntry() {
-        return [this.output, this.channel, this.name, this.color]
+        return [this.output, this.source, this.name, this.color]
     }
 
     get_styleClass() {
@@ -61,6 +62,46 @@ class OutputItem{
             return 'color' + this.color;            
         }
         return null
+    }
+}
+
+function add_leading_chars(num_in, len, char) {
+    var num = String(num_in);
+    while(num.length < len) {
+        num = String(char) + num;
+    }
+    return num
+}
+
+function convert_op_num_to_id(num_in) {
+    var num = Number(num_in);
+    if (num == 0) { return 'off' }
+    if (num == 1) { return 'main-st' }
+    if (num == 2) { return 'main-st' }
+    if (num == 3) { return 'main-m' }
+    num = num - 3;
+    if (num <= 16) { return 'bus-' + add_leading_chars(num, 2, '0') }
+    num = num - 16;
+    if (num <= 6) { return 'mtx-' + add_leading_chars(num, 2, '0') }
+    num = num - 6;
+    if (num <= 32) { return 'ch-' + add_leading_chars(num, 2, '0') }
+    num = num - 32;
+    if (num <= 8) { return 'auxin-' + add_leading_chars(num, 2, '0') }
+    num = num - 8;
+    if (num <= 8) { return 'fxrtn-' + add_leading_chars(num, 2, '0') }
+    num = num - 8;
+    if (num == 1) { return 'MonL' }
+    if (num == 2) { return 'MonR' }
+    if (num == 3) { return 'TB' }
+    throw 'Unknown source ' + num_in
+}
+
+class Output{
+    constructor(id, src_num, src, chn) {
+        this.id = id;
+        this.src_num = src_num;
+        this.src = src;
+        this.chn = chn;
     }
 }
 
@@ -124,11 +165,15 @@ function proceed() {
         parse_inputs_patch();
         // console.log(inList);
         link_channels_to_ip();
-        console.log(ip_chan_list);
+        // console.log(ip_chan_list);
         build_table('inputtable', ip_chan_list);
 
-        op_chan_list = []
-        op_chan_list.push(new OutputItem('TEST1', 'testitestitest'));
+        parse_outputs();
+        console.log(outputs);
+        op_chan_list = [];
+        build_core_direct_outputs();
+        console.log(op_chan_list);
+
         build_table('outputtable', op_chan_list);
 
         init_filtertable();
@@ -158,7 +203,7 @@ function parse_channels(){
             var ch_color = line.split(' ')[line.split(' ').length-2];
             var ch_ip = line.split(' ')[line.split(' ').length-1];
             // console.log([ch_dir, ch_type, ch_num, ch_name, ch_color, ch_ip])
-            channels.push(new Channel('in', ch_type, ch_num, ch_name, ch_color, ch_ip));
+            channels.set(ch_type + '-' + ch_num, new Channel('in', ch_type, ch_num, ch_name, ch_color, ch_ip));
 
         } else if(/^\/(fxrtn|bus|mtx|main)\/(\d\d|st|m)\/config/.test(line)){
             var ch_dir = 'out';
@@ -167,18 +212,19 @@ function parse_channels(){
             var ch_name = line.split('"')[1];
             var ch_color = line.split(' ')[line.split(' ').length-1];
             // console.log([ch_dir, ch_type, ch_num, ch_name, ch_color]);
-            channels.push(new Channel('out', ch_type, ch_num, ch_name, ch_color));
+            channels.set(ch_type + '-' + ch_num, new Channel('out', ch_type, ch_num, ch_name, ch_color));
         }
     });
 }
 
 function create_input_list() {
     console.log("Create input-list")
-    channels.forEach(channel => {
+    for (pair of channels) {
+        channel = pair[1];
         if(channel.dir=='in'){
             ip_list.set(Number(channel.in_nr), channel);
         }
-    });
+    }
 }
 
 function parse_inputs_patch() {
@@ -237,14 +283,11 @@ function link_channels_to_ip(){
 function build_table(id, list){
     var table = document.querySelector('#' + id + ' table');
     // Clean previous runs
-    console.log(table.childElementCount);
     table.innerHTML = '';
     table.innerText = '';
-    console.log(table.childElementCount);
     while(table.childElementCount) {
         table.removeChild(table.firstChild);
     }
-    console.log(table.childElementCount);
     // Build head
     var thead = document.createElement('thead');
     table.appendChild(thead);
@@ -271,4 +314,62 @@ function build_table(id, list){
         });
         tbody.appendChild(trow);
     });
+}
+
+function parse_outputs(){
+    console.log("Parse Outputs");
+    file_content.forEach(line => {
+        if(/^\/outputs\/(main|aux|p16|aes|rec)\/(\d+) (\d+) /.test(line)){
+            var op_type = line.split('/')[2];
+            var op_num = line.split('/')[3].split(' ')[0];
+            var src_num = line.split(' ')[1];
+            var src_id = convert_op_num_to_id(src_num);
+
+            outputs.push(new Output(
+                op_type  + '-' + op_num,
+                src_num,
+                src_id,
+                channels.get(src_id)
+            ));
+
+        }
+    });
+}
+
+function build_core_direct_outputs() {
+    console.log("Build core outputs");
+    outputs.forEach(op => {
+        if (['p16', 'aux', 'aes', 'rec'].includes(op.id.split('-')[0])) {
+            op_chan_list.push(new OutputItem(op.id, op.src, op.chn.name, op.chn.color));
+        }
+    });
+}
+
+function parse_out_patch() {
+    console.log("Parse output patch");
+    file_content.forEach(line => {
+        if(/^\/config\/routing\/(AES50[AB]|CARD|OUT)/.test(line)){
+            name = line.split(' ')[0].split('/')[3];
+            var counter = 0;
+            // inList = new InputList();
+            line.split(name)[1].split(' ').forEach(block => {
+                regexp = /(AN|A|B|CARD|AUX)(\d\d?)\-(\d\d?)/
+                if(regexp.test(block)){
+                    var match = regexp.exec(block);
+                    var src = match[1];
+                    var start = parseInt(match[2]);
+                    var end = parseInt(match[3]);
+                    for(var i=0; i<=end-start; i++){
+                        counter++;
+                        // inList.set_input(counter, src + '-' + String(start + i));
+                    }
+                }
+            });
+        }
+    });
+}
+
+function build_patch_outputs() {
+    console.log("Build patched outputs");
+    // TODO
 }
