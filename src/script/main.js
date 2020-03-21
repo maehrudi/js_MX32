@@ -159,19 +159,21 @@ function proceed() {
         read_text_file(selected_file);
     } else if(true) {
         parse_channels();
-        // console.log(channels);
+        console.log(channels);
         create_input_list();
         // console.log(ip_list);
         parse_inputs_patch();
         // console.log(inList);
         link_channels_to_ip();
-        // console.log(ip_chan_list);
+        console.log(ip_chan_list);
         build_table('inputtable', ip_chan_list);
 
         parse_outputs();
         console.log(outputs);
         op_chan_list = [];
         build_core_direct_outputs();
+        console.log(op_chan_list);
+        parse_out_patch();
         console.log(op_chan_list);
 
         build_table('outputtable', op_chan_list);
@@ -243,7 +245,7 @@ function parse_inputs_patch() {
                     var end = parseInt(match[3]);
                     for(var i=0; i<=end-start; i++){
                         counter++;
-                        inList.set_input(counter, src + '-' + String(start + i));
+                        inList.set_input(counter, src + '-' + add_leading_chars(String(start + i), 2, '0'));
                     }
                 }
             });
@@ -263,7 +265,7 @@ function link_channels_to_ip(){
         ['USB', 2]
     ].forEach( pair => {
         for(var i=1; i<=pair[1]; i++) {
-            var id = pair[0] + '-' + String(i);
+            var id = pair[0] + '-' + add_leading_chars(String(i), 2, '0');
             if(inList.has_id(id)) {
                 var in_nr = inList.get_num_for(id);
                 if(ip_list.has(in_nr)) {
@@ -353,16 +355,47 @@ function parse_out_patch() {
             var counter = 0;
             // inList = new InputList();
             line.split(name)[1].split(' ').forEach(block => {
-                regexp = /(AN|A|B|CARD|AUX)(\d\d?)\-(\d\d?)/
+                regexp = /(OUT|AN|A|B|CARD|P16)(\d\d?)\-(\d\d?)/
                 if(regexp.test(block)){
                     var match = regexp.exec(block);
                     var src = match[1];
                     var start = parseInt(match[2]);
                     var end = parseInt(match[3]);
+                    if (src == 'OUT') { src = 'main'}
+                    if (src == 'P16') { src = 'p16'}
+
                     for(var i=0; i<=end-start; i++){
+
                         counter++;
-                        // inList.set_input(counter, src + '-' + String(start + i));
+                        var ch_name = '-';
+                        var ch_color = '-';
+                        var src_id = src + '-' + add_leading_chars(String(start + i), 2, '0');
+                        var src_name = src_id;
+                        outputs.forEach( op => {
+                            if (op.id == src_id) {
+                                src_name = op.src;
+                                ch_name = op.chn.name;
+                                ch_color = op.chn.color;
+                            }
+                        });
+                        ip_chan_list.forEach( ip => {
+                            if (ip.input == src_id) {
+                                src_name = ip.channel;
+                                ch_name = ip.name;
+                                ch_color = ip.color;
+                            }
+                        });
+                        
+                        op_chan_list.push(new OutputItem(
+                            name + '-' + counter,
+                            src_name,
+                            ch_name,
+                            ch_color
+                        ));
                     }
+                }
+                if (['AUX/CR', 'AUX/TB'].includes(name)) {
+
                 }
             });
         }
