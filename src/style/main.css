@@ -1,0 +1,49 @@
+body {
+    background-color: white;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    text-align: center;
+    margin: auto;
+}
+
+.filtertable{
+    border-collapse: collapse;
+    border: solid 1px black;
+    margin: 10px;
+}
+
+.filtertable tr{
+    border: solid 1px black;
+}
+
+.colorMGi, .colorMG {
+    background-color: magenta;
+}
+
+.colorOFF, .colorOFFi {
+    background-color: gray;
+}
+
+.colorCY, .colorCYi {
+    background-color: cyan;
+}
+
+.colorGN, .colorGNi {
+    background-color: green;
+}
+
+.colorYE, .colorYEi {
+    background-color: yellow;
+}
+
+.colorRD, .colorRDi {
+    background-color: red;
+}
+
+.colorBL, .colorBLi {
+    background-color: blue;
+}
+
+.colorWH, .colorWHi {
+    background-color: white;
+}
+
