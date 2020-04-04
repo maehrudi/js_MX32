@@ -1,3 +1,5 @@
+
+
 function init_filtertable() {
     console.log("init_filtertable")
 
@@ -29,5 +31,4 @@ function init_filtertable() {
             
         });
     });
-
 }
