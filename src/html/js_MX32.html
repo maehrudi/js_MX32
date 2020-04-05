@@ -4,18 +4,26 @@
         <meta charset="utf-8"/>
         <title>js_MX32</title>
         <link rel="stylesheet" href="../style/main.css"/>
+        <script src="../script/libs/Utilities.js"></script>
+        <script src="../script/libs/MixerClasses.js"></script>
         <script src="../script/main.js"></script>
-        <script src="../script/filtertable.js"></script>
+        <script src="../script/gui/filtertable.js"></script>
     </head>
         
     <body>
-        <h1>js_MX32</h1>
-        <div id="loadscrene">Load scene: <input type="file" id="scenefile" name="files[]" onchange="load_scene(this)"/></div>
-        <div id="inputtable">
-            <table class="filtertable"></table>
+        <div id="header">
+            <h1>js_MX32</h1>
+            <div id="loadscene">Load scene: <input type="file" id="scenefile" name="files[]" onchange="load_scene(this)"/></div>            
         </div>
-        <div id="outputtable">
-            <table class="filtertable"></table>
+        <div id="resulttables">
+            <div id="inputtable">
+                <div class="tablecaption">Inputs</div>
+                <table class="filtertable"></table>
+            </div>
+            <div id="outputtable">
+                <div class="tablecaption">Outputs</div>
+                <table class="filtertable"></table>
+            </div>
         </div>
     </body>
 </html>
