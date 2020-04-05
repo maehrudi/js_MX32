@@ -1,4 +1,5 @@
 
+// enable filtering for tables marked with class "filtertable"
 
 function init_filtertable() {
     console.log("init_filtertable")
@@ -41,22 +42,6 @@ function init_filtertable() {
             });
         });
     });
-
-
-    // document.querySelectorAll('.filtertable thead input').forEach(input_elem => {
-    //     input_elem.addEventListener('keyup', function(event) {
-    //         var evt_src = event.target;
-    //         var ip_value = evt_src.value;
-    //         var col_idx = evt_src.parentElement.cellIndex;
-            
-    //         evt_src.closest('.filtertable').querySelectorAll('tbody tr').forEach(this_row => {
-    //             if(ip_value == '' || this_row.childNodes[col_idx].innerText.toLowerCase().startsWith(ip_value.toLowerCase())) {
-    //                 this_row.style.display = '';
-    //             }else{
-    //                 this_row.style.display = 'none';
-    //             }
-    //         });
-            
-    //     });
-    // });
 }
+
+//
